@@ -7,5 +7,5 @@ import (
 )
 
 func (server *Server) Home(w http.ResponseWriter, r *http.Request) {
-	response.JSON(w, http.StatusOK, "Bitget Websocket API")
+	response.JSON(w, http.StatusOK, "Future Trading Bot")
 }

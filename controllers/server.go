@@ -27,6 +27,9 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 		log.Printf("Connected to the %s database", Dbdriver)
 	}
 
+	server.Router = mux.NewRouter()
+	server.initializeRoutes()
+
 	server.DB.AutoMigrate(&models.Key{})
 }
 
