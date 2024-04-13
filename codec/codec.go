@@ -8,9 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 )
 
-func Encrypt(key []byte, text string) (string, error) {
+func Encrypt(text string) (string, error) {
+	key := []byte(os.Getenv("ENCRYPTION_PASS"))
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
@@ -25,7 +28,9 @@ func Encrypt(key []byte, text string) (string, error) {
 	return fmt.Sprintf("%x", ciphertext), nil
 }
 
-func Decrypt(key []byte, text string) (string, error) {
+func Decrypt(text string) (string, error) {
+	key := []byte(os.Getenv("ENCRYPTION_PASS"))
+
 	ciphertext, err := hex.DecodeString(text)
 	if err != nil {
 		return "", err

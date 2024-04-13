@@ -34,11 +34,11 @@ func (k *Key) SaveKey(db *gorm.DB) (*Key, error) {
 	return k, nil
 }
 
-func (k *Key) FindKeysByEmail(db *gorm.DB, email string) (*[]Key, error) {
-	Keys := []Key{}
-	err := db.Model(Key{}).Where("user_email = ?", email).Find(&Keys).Error
+func (k *Key) FindKeyByEmail(db *gorm.DB, email string) (*Key, error) {
+	Keys := Key{}
+	err := db.Model(Key{}).Where("user_email = ?", email).First(&Keys).Error
 	if err != nil {
-		return &[]Key{}, err
+		return &Key{}, err
 	}
 	return &Keys, nil
 }

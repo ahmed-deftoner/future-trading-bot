@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"os"
 
 	"github.com/ahmed-deftoner/future-trading-bot/codec"
 	"github.com/ahmed-deftoner/future-trading-bot/models"
@@ -23,7 +22,6 @@ type KeyRequest struct {
 }
 
 func (server *Server) CreateKey(w http.ResponseWriter, r *http.Request) {
-	encryptionKey := os.Getenv("ENCRYPTION_PASS")
 	var keyRequest KeyRequest
 	err := json.NewDecoder(r.Body).Decode(&keyRequest)
 	if err != nil {
@@ -31,17 +29,17 @@ func (server *Server) CreateKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encryptedApiKey, err := codec.Encrypt([]byte(encryptionKey), keyRequest.ApiKey)
+	encryptedApiKey, err := codec.Encrypt(keyRequest.ApiKey)
 	if err != nil {
 		response.ERROR(w, http.StatusInternalServerError, errors.New("failed to encrypt api key"))
 		return
 	}
-	encryptedSecretKey, err := codec.Encrypt([]byte(encryptionKey), keyRequest.SecretKey)
+	encryptedSecretKey, err := codec.Encrypt(keyRequest.SecretKey)
 	if err != nil {
 		response.ERROR(w, http.StatusInternalServerError, errors.New("failed to encrypt secret key"))
 		return
 	}
-	encryptedPassphrase, err := codec.Encrypt([]byte(encryptionKey), keyRequest.Passphrase)
+	encryptedPassphrase, err := codec.Encrypt(keyRequest.Passphrase)
 	if err != nil {
 		response.ERROR(w, http.StatusInternalServerError, errors.New("failed to encrypt passphrase"))
 		return
