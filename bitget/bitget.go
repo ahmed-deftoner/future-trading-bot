@@ -49,7 +49,7 @@ func GetBitgetServerTimeStamp() string {
 	return strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10)
 }
 
-func GenerateBitgetSignature(apiSecret string, apiKey string, passphrase string, method string, uri string, timestamp string, requestBody string) string {
+func GenerateBitgetSignature(apiSecret string, method string, uri string, timestamp string, requestBody string) string {
 	message := ""
 	if method == "GET" {
 		message = fmt.Sprintf("%s%s%s", timestamp, method, uri)
@@ -78,7 +78,7 @@ func PlaceBitgetBatchOrder(apiKey string, secretKey string, passphrase string, o
 	}
 
 	serverTime := GetBitgetServerTimeStamp()
-	signature := GenerateBitgetSignature(secretKey, apiKey, passphrase, "POST", path, serverTime, string(jsonVal))
+	signature := GenerateBitgetSignature(secretKey, "POST", path, serverTime, string(jsonVal))
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(jsonVal))
 	req.Header.Add("ACCESS-KEY", apiKey)
@@ -115,65 +115,4 @@ func PlaceBitgetBatchOrder(apiKey string, secretKey string, passphrase string, o
 	}
 
 	return batchResponse, nil
-}
-
-type NormalOrderRequest struct {
-	Symbol     string `json:"symbol"`
-	MarginCoin string `json:"marginCoin"`
-	Size       string `json:"size"`
-	Side       string `json:"side"`
-	OrderType  string `json:"orderType"`
-}
-
-func PlaceClosePositionOrder(apiKey string, secretKey string, passphrase string, symbol string, side string, size string, marginCoin string) (string, error) {
-	payload := NormalOrderRequest{
-		MarginCoin: marginCoin,
-		Symbol:     symbol,
-		Size:       size,
-		Side:       side,
-		OrderType:  "market",
-	}
-
-	host := "https://api.bitget.com"
-	path := "/api/mix/v1/order/placeOrder"
-	url := host + path
-
-	method := "POST"
-	client := &http.Client{}
-
-	jsonVal, err := json.Marshal(payload)
-	if err != nil {
-		return "", err
-	}
-
-	serverTime := GetBitgetServerTimeStamp()
-	signature := GenerateBitgetSignature(secretKey, apiKey, passphrase, "POST", path, serverTime, string(jsonVal))
-
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(jsonVal))
-	req.Header.Add("ACCESS-KEY", apiKey)
-	req.Header.Add("ACCESS-SIGN", signature)
-	req.Header.Add("ACCESS-TIMESTAMP", serverTime)
-	req.Header.Add("ACCESS-PASSPHRASE", passphrase)
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("local", "zh-CN")
-
-	if err != nil {
-		return "", err
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return "", err
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return "", errors.New("unable to close position at the moment")
-	}
-	return string(body), nil
 }

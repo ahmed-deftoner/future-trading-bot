@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/ahmed-deftoner/future-trading-bot/bitget"
 	"github.com/ahmed-deftoner/future-trading-bot/codec"
@@ -53,30 +54,60 @@ func placeTrade() {
 		log.Fatal("Error Getting key")
 	}
 
-	fmt.Println(key.UserEmail)
-
 	api_key, secret_key, passphrase := decryptKeyInfo(key.ApiKey, key.SecretKey, key.Passphrase)
-	longOrder := bitget.OrderRequest{
-		Size:      "10",
-		Side:      "close_long",
-		OrderType: "Market",
-	}
+	go func() {
+		longOrder := bitget.OrderRequest{
+			Size:      "10",
+			Side:      "open_long",
+			OrderType: "Market",
+		}
 
-	shortOrder := bitget.OrderRequest{
-		Size:      "10",
-		Side:      "close_short",
-		OrderType: "Market",
-	}
+		shortOrder := bitget.OrderRequest{
+			Size:      "10",
+			Side:      "open_short",
+			OrderType: "Market",
+		}
 
-	batchOrderRequest := bitget.BitgetBatchOrderRequest{
-		Symbol:        "SXRPSUSDT_SUMCBL",
-		MarginCoin:    "SUSDT",
-		OrderDataList: []bitget.OrderRequest{longOrder, shortOrder},
-	}
+		batchOrderRequest := bitget.BitgetBatchOrderRequest{
+			Symbol:        "SXRPSUSDT_SUMCBL",
+			MarginCoin:    "SUSDT",
+			OrderDataList: []bitget.OrderRequest{longOrder, shortOrder},
+		}
 
-	resp, err := bitget.PlaceBitgetBatchOrder(api_key, secret_key, passphrase, &batchOrderRequest)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(resp)
+		_, err := bitget.PlaceBitgetBatchOrder(api_key, secret_key, passphrase, &batchOrderRequest)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Opened Postions")
+	}()
+
+	// Asynchronously place the batch close order after a delay
+	go func() {
+		time.Sleep(30 * time.Second)
+
+		longCloseOrder := bitget.OrderRequest{
+			Size:      "10",
+			Side:      "close_long",
+			OrderType: "Market",
+		}
+
+		shortCloseOrder := bitget.OrderRequest{
+			Size:      "10",
+			Side:      "close_short",
+			OrderType: "Market",
+		}
+
+		batchCloseOrderRequest := bitget.BitgetBatchOrderRequest{
+			Symbol:        "SXRPSUSDT_SUMCBL",
+			MarginCoin:    "SUSDT",
+			OrderDataList: []bitget.OrderRequest{longCloseOrder, shortCloseOrder},
+		}
+
+		_, err := bitget.PlaceBitgetBatchOrder(api_key, secret_key, passphrase, &batchCloseOrderRequest)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Closed Postions")
+	}()
+
 }
